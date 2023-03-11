@@ -1,2 +1,4 @@
 # DumpCalendar2
-Converts ICS files for taxes
+Converts an ICS file to a tab-separated output.
+
+Instructions are at the top of the script.
