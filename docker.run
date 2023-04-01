@@ -1,0 +1,6 @@
+sudo docker run -it --rm --name dump-calendar \
+  -v "$PWD":/usr/src/app \
+  -v /etc/localtime:/etc/localtime:ro \
+  -w /usr/src/app dump-calendar \
+  python dumpCalendar.py "$@"
+

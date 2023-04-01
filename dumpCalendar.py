@@ -17,7 +17,6 @@
 #
 
 import sys, os.path, argparse, time, datetime
-#import pytz
 from icalendar import Calendar, Event
 import recurring_ical_events
 
@@ -35,57 +34,33 @@ def getEvents(args):
     
     print('Dumping year {}'.format(args.year))
     
-    #myTZ = timezone('America/New_York')
     myTZ = datetime.datetime.now().astimezone().tzinfo
-    print('My timezone is {}'.format(myTZ)
+    print('My timezone is {}'.format(myTZ))
     
     timeMin = datetime.datetime(args.year, 1, 1, tzinfo = myTZ)
     timeMax = datetime.datetime(args.year, 12, 31, 23, 59, 59, tzinfo = myTZ)
-    events = recurring_ical_events.of(calendar).between(timeMin, timeMax)
-    
-#    events = []
-#    for comp in cal.walk():
-#        if comp.name == 'VTIMEZONE':
-#            to_tz = comp.to_tz();
-#            print('Using timezone {}'.format(to_tz))
-#            timeMin = datetime.datetime(args.year, 1, 1, tzinfo = to_tz)
-#            timeMax = datetime.datetime(args.year, 12, 31, 23, 59, 59, tzinfo = to_tz)
-#        elif comp.name == "VEVENT":
-#            start = comp.decoded('dtstart')
-#            if not isinstance(start, datetime.datetime): continue
-#            if start >= timeMin and start <= timeMax:
-#                events.append({
-#                    'summary': comp.get('summary'),
-#                    'start': start.astimezone(to_tz),
-#                    'end': comp.decoded('dtend').astimezone(to_tz)
-#                })
-#        elif comp.name in ('VCALENDAR', 'DAYLIGHT', 'STANDARD'):
-#            pass
-#        else:
-#            print('WARNING: Unhandled component {}'.format(comp.name))
-            
-#    if not to_tz:
-#        print('No timezone was found!')
-#        sys.exit(1)
-    
-#    events.sort(key = lambda e: e['start'])
+    allEvents = recurring_ical_events.of(cal).between(timeMin, timeMax)
+
+    # filter events
+    events = []
+    for event in allEvents:
+        if not isinstance(event['DTSTART'].dt, datetime.datetime):
+            continue
+        events.append({
+            'summary': event['SUMMARY'],
+            'start': event['DTSTART'].dt.astimezone(myTZ),
+            'end': event['DTEND'].dt.astimezone(myTZ)
+        })
+        
+    events.sort(key = lambda e: e['start'])
     
     month = 1
     print('{}\t{}\t{}\t{}'.format('Start', 'End', 'Diff', 'Summary'))
     for event in events:
-        start = event['DTSTART'].dt.astimezone(myTZ)
-        end = event['DTEND'].dt.astimezone(myTZ)
-        duration = end - start
-        
-        #print('{}'.format(start))
-#        diff = end - start
-#        hours, seconds = divmod(diff.seconds, 3600)
-#        minutes = int(seconds / 60)
-        if month != start.month:
-            month = start.month
+        if month != event['start'].month:
+            month = event['start'].month
             print()
-#        print('{}\t{}\t{}:{:02d}\t{}'.format(start.strftime('%m/%d/%Y %H:%M:%S'), end.strftime('%m/%d/%Y %H:%M:%S'), hours, minutes, event['summary']))
-        print('{}\t{}\t{}\t{}'.format(start.strftime('%m/%d/%Y %H:%M:%S'), end.strftime('%m/%d/%Y %H:%M:%S'), duration, event['SUMMARY']))
+        print('{}\t{}\t{}\t{}'.format(event['start'].strftime('%m/%d/%Y %H:%M:%S'), event['end'].strftime('%m/%d/%Y %H:%M:%S'), event['end'] - event['start'], event['summary']))
 
     
 if __name__ == '__main__':
